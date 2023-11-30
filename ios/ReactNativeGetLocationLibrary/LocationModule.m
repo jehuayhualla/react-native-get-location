@@ -106,16 +106,25 @@ RCT_EXPORT_METHOD(openAppSettings: (RCTPromiseResolveBlock)resolve
     if (locations.count > 0 && mResolve != nil) {
         CLLocation* location = locations[0];
         
-        NSDictionary* locationResult = @{
-            @"latitude": @(location.coordinate.latitude),
-            @"longitude": @(location.coordinate.longitude),
-            @"altitude": @(location.altitude),
-            @"speed": @(location.speed),
-            @"accuracy": @(location.horizontalAccuracy),
-            @"time": @(location.timestamp.timeIntervalSince1970 * 1000),
-            @"verticalAccuracy": @(location.verticalAccuracy),
-            @"course": @(location.course),
-        };
+        NSMutableDictionary* locationResult = [NSMutableDictionary dictionary];
+        locationResult[@"latitude"] = @(location.coordinate.latitude);
+        locationResult[@"longitude"] = @(location.coordinate.longitude);
+        locationResult[@"altitude"] = @(location.altitude);
+        locationResult[@"speed"] = @(location.speed);
+        locationResult[@"accuracy"] = @(location.horizontalAccuracy);
+        locationResult[@"time"] = @(location.timestamp.timeIntervalSince1970 * 1000);
+        locationResult[@"verticalAccuracy"] = @(location.verticalAccuracy);
+        locationResult[@"course"] = @(location.course);
+        
+        // If we can't read isSimulatedBySoftware and isProducedByAccessory flags, we consider the location as fake
+        bool isFakeLocation = true;
+        if (@available(iOS 15.0, *)) {
+            if (location.sourceInformation) {
+                isFakeLocation = location.sourceInformation.isSimulatedBySoftware || location.sourceInformation.isProducedByAccessory;
+            }
+        }
+      
+        locationResult[@"isFakeLocation"] = @(isFakeLocation);
         
         mResolve(locationResult);
     }
